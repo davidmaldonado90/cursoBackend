@@ -1,19 +1,27 @@
 class ProductManager {
+    #products;
+    #productDirPath;
+    #productFilePath
+    #fileSys
+
     constructor() {
-        this.products = [];
+        this.#products = new Array();
+        this.#productDirPath = "./files";
+        this.#productFilePath = this.#productDirPath + "/Products.json";
+        this.#fileSys = require("fs");
     }
 
     static id = 0
 
-addProduct(title, description, price, thumbnail, code, stock) {
+
+addProduct = async (title, description, price, thumbnail, code, stock)  => {
     
-    if (this.products.find((el) => el.code === code)){
+    if (this.#products.find((el) => el.code === code)){
         console.log (`el codigo ${code} ya existe`);
         return;
     ;
     }
-    
-    
+    ProductManager.id++;
     const newProduct = {
         title, 
         description, 
@@ -21,39 +29,50 @@ addProduct(title, description, price, thumbnail, code, stock) {
         thumbnail, 
         code, 
         stock,
-    }
+    } 
 
-    if (!Object.values(newProduct).includes(undefined)){
-         ProductManager.id++;
-         this.products.push({...newProduct, id :ProductManager.id}) ;
-        }
-         else {
-            console.log("se deben rellenar todos los campos");
-         } 
+    // if (!Object.values(newProduct).includes(undefined)){
+    //      this.#products.push({id : ProductManager.id, ...newProduct, }) ;
+    //     }
+    //      else {
+    //         console.log("se deben rellenar todos los campos");
+    //      } 
+
+         try {
+             await this.#fileSys.promises.mkdir(this.#productDirPath, {recursive : true})
+
+             if(!this.#fileSys.existsSync(this.#productFilePath)){
+                await this.#fileSys.promises.writeFile(this.#productFilePath, "[]")
+             }
+
+            let files = await this.#fileSys.promises.readFile(this.#productFilePath, "utf-8")
+            this.#products = JSON.parse(files)
+            this.#products.push({...newProduct, id: ProductManager.id});
+            console.log(newProduct);
+
+            await this.#fileSys.promises.writeFile(this.#productFilePath, JSON.stringify(this.#products, null, 2),
+            "utf8");
+
+         } catch (error) {
+            console.error(`Error creando producto nuevo: ${JSON.stringify(newProduct)}, detalle del error: ${error}`);
+         }
 }
+
 
 
 exist (id){
-    return this.products.find((el) => el.id === id)
+    return this.#products.find((el) => el.id === id)
 }
 
 getProducts(){
-    return this.products;
+    return this.#products;
     }
     
-getProductById(id) {
+getProductById = async (id) => {
     !this.exist(id) ? console.log("Not Found") : console.log(this.exist(id));
 }
     
 }
-    
-const productos = new ProductManager();
 
 
-productos.addProduct("producto de prueba", "este es un producto de prueba", 4000, "sin foto", "abc133",)
-productos.addProduct("producto de prueba 2", "segundo producto de prueba", 5000, "sin foto", "abc123", 400)
-
-console.table(productos.getProducts());
-
-
-productos.getProductById(2)
+module.exports = ProductManager;
