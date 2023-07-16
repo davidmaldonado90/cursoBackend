@@ -1,3 +1,5 @@
+const { log } = require("console");
+
 class ProductManager {
     #products;
     #productDirPath;
@@ -16,6 +18,7 @@ class ProductManager {
 
 addProduct = async (title, description, price, thumbnail, code, stock)  => {
     
+    //se verifica que el codigo del producto no este
     if (this.#products.find((el) => el.code === code)){
         console.log (`el codigo ${code} ya existe`);
         return;
@@ -48,7 +51,6 @@ addProduct = async (title, description, price, thumbnail, code, stock)  => {
             let files = await this.#fileSys.promises.readFile(this.#productFilePath, "utf-8")
             this.#products = JSON.parse(files)
             this.#products.push({...newProduct, id: ProductManager.id});
-            console.log(newProduct);
 
             await this.#fileSys.promises.writeFile(this.#productFilePath, JSON.stringify(this.#products, null, 2),
             "utf8");
@@ -58,18 +60,37 @@ addProduct = async (title, description, price, thumbnail, code, stock)  => {
          }
 }
 
-
-
-exist (id){
-    return this.#products.find((el) => el.id === id)
+readProducts = async () =>{
+    let result = await this.#fileSys.promises.readFile(this.#productFilePath, "utf-8")
+    return JSON.parse(result)
 }
 
-getProducts(){
-    return this.#products;
-    }
+getProducts = async () => {
+    let result2 = await this.readProducts()
+    return console.log(result2);
+;
+}
     
 getProductById = async (id) => {
-    !this.exist(id) ? console.log("Not Found") : console.log(this.exist(id));
+    let result3 = await this.readProducts()
+    !result3.find((el) => el.id === id) ? console.log("not found") : console.log(result3.find((el) => el.id === id)); 
+
+}
+
+deleteProduct = async (id) => {
+    let delProd = await this.readProducts()
+    let filter = delProd.filter(el => el.id != id)
+    
+    await this.#fileSys.promises.writeFile(this.#productFilePath, JSON.stringify(filter)); 
+    console.log("producto eliminado");
+    
+}
+
+updateProduct = async (id, ...prod) => {
+    await this.deleteProduct(id)
+    let prodOld = await this.readProducts()
+    let prodUpdate = [...prod, id, ...prodOld];
+    await this.#fileSys.promises.writeFile(this.#productFilePath, JSON.stringify(prodUpdate))
 }
     
 }
