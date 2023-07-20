@@ -1,4 +1,4 @@
-const { log } = require("console");
+import fs from "fs"
 
 class ProductManager {
     #products;
@@ -8,9 +8,9 @@ class ProductManager {
 
     constructor() {
         this.#products = new Array();
-        this.#productDirPath = "./files";
+        this.#productDirPath = "../files";
         this.#productFilePath = this.#productDirPath + "/Products.json";
-        this.#fileSys = require("fs");
+        this.#fileSys = fs;
     }
 
     static id = 0
@@ -54,6 +54,7 @@ addProduct = async (title, description, price, thumbnail, code, stock)  => {
 
             await this.#fileSys.promises.writeFile(this.#productFilePath, JSON.stringify(this.#products, null, 2),
             "utf8");
+            console.log(`producto ${title} agregado correctamente!`);
 
          } catch (error) {
             console.error(`Error creando producto nuevo: ${JSON.stringify(newProduct)}, detalle del error: ${error}`);
@@ -66,20 +67,26 @@ readProducts = async () =>{
 }
 
 getProducts = async () => {
-    let result2 = await this.readProducts()
-    return console.log(result2);
+    const result2 = await this.readProducts()
+    return result2;
 ;
 }
     
 getProductById = async (id) => {
-    let result3 = await this.readProducts()
-    !result3.find((el) => el.id === id) ? console.log("not found") : console.log(result3.find((el) => el.id === id)); 
+    const result3 = await this.readProducts()
+    const foundProduct = result3.find((el) => el.id === id)
+    if(foundProduct){
+        return foundProduct
+    } 
+    else{
+        return null
+    } 
 
 }
 
 deleteProduct = async (id) => {
-    let delProd = await this.readProducts()
-    let filter = delProd.filter(el => el.id != id)
+    const delProd = await this.readProducts()
+    const filter = delProd.filter(el => el.id != id)
     
     await this.#fileSys.promises.writeFile(this.#productFilePath, JSON.stringify(filter)); 
     console.log("producto eliminado");
@@ -95,5 +102,4 @@ updateProduct = async (id, ...prod) => {
     
 }
 
-
-module.exports = ProductManager;
+export default ProductManager;
